@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart</title>
+    <!-- เพิ่มลิงก์ Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        const productData = [
+            { id: 1, price: 99, quantity: 2 },
+            { id: 2, price: 99, quantity: 1 }
+        ];
+
+        // ฟังก์ชันอัพเดทจำนวนสินค้า
+        function updateQuantity(itemId, change = 0) {
+            const item = productData.find(product => product.id === itemId);
+            
+            // อัพเดทจำนวนสินค้า
+            if (change !== 0) {
+                item.quantity += change;
+            } else {
+                const input = document.querySelector(`.quantity-input[data-id="${itemId}"]`);
+                item.quantity = parseInt(input.value) || 0;
+            }
+
+            // อัพเดตค่าจำนวนสินค้าบน UI
+            const input = document.querySelector(`.quantity-input[data-id="${itemId}"]`);
+            input.value = item.quantity;
+
+            // อัพเดตยอดรวม
+            updateOrderInfo();
+        }
+
+        // ฟังก์ชันอัพเดตยอดรวม
+        function updateOrderInfo() {
+            let subtotal = 0;
+            let totalQuantity = 0;
+
+            productData.forEach(item => {
+                subtotal += item.price * item.quantity;
+                totalQuantity += item.quantity;
+            });
+
+            // คำนวณค่าจัดส่ง
+            let shipping = 5; // ค่าจัดส่งพื้นฐาน
+            if (totalQuantity >= 10) {
+                shipping = totalQuantity; // ถ้ามีสินค้าตั้งแต่ 10 ชิ้นขึ้นไป คิดค่าจัดส่งชิ้นละ 1$
+            }
+
+            const total = subtotal + shipping;
+
+            // อัพเดตค่าใน Order Info
+            document.getElementById('subtotal').textContent = `$${subtotal}`;
+            document.getElementById('shipping').textContent = `$${shipping}`;
+            document.getElementById('total').textContent = `$${total}`;
+        }
+
+        // // ฟังก์ชันสำหรับย้อนกลับ
+     // ฟังก์ชันสำหรับย้อนกลับ
+     function goBack() {
+            if (window.history.length > 1) {
+                window.history.back(); 
+            } else {
+                window.location.href = 'index.html'; 
+            }
+        }
+
+        // เรียกใช้เมื่อโหลดหน้าเพื่อตั้งค่าเริ่มต้น
+        window.onload = updateOrderInfo;
+                // ฟังก์ชันย่อ/ขยายส่วน Shipping Address
+                function toggleShippingAddress() {
+            const shippingSection = document.getElementById('shipping-address');
+            const arrow = document.getElementById('shipping-arrow');
+            shippingSection.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+        }
+
+        // ฟังก์ชันย่อ/ขยายส่วน Payment Method
+        function togglePaymentMethod() {
+            const paymentSection = document.getElementById('payment-method');
+            const arrow = document.getElementById('payment-arrow');
+            paymentSection.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+        }
+
+        // ฟังก์ชันตรวจสอบการกรอกข้อมูลที่อยู่
+        function checkAddress() {
+            const address = document.getElementById('address').value;
+            const addressCheck = document.getElementById('address-check');
+            if (address.trim() !== '') {
+                addressCheck.classList.remove('hidden');
+            } else {
+                addressCheck.classList.add('hidden');
+            }
+        }
+
+        // ฟังก์ชันสำหรับการเลือก Payment Method
+        function checkPaymentMethod() {
+            const paymentChecked = document.querySelector('input[name="payment-method"]:checked');
+            const paymentCheck = document.getElementById('payment-check');
+            if (paymentChecked) {
+                paymentCheck.classList.remove('hidden');
+            } else {
+                paymentCheck.classList.add('hidden');
+            }
+        }
+
+        // เรียกใช้เมื่อโหลดหน้าเพื่อตั้งค่าเริ่มต้น
+        window.onload = function() {
+            updateOrderInfo();
+            // เรียกฟังก์ชันตรวจสอบการกรอกที่อยู่
+            document.getElementById('address').addEventListener('input', checkAddress);
+            // เรียกฟังก์ชันตรวจสอบการเลือก payment method
+            document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+                radio.addEventListener('change', checkPaymentMethod);
+            });
+        };
+    </script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- ปุ่มลูกศรย้อนกลับ -->
+    <div class="absolute top-4 left-4">
+        <button onclick="goBack()" class="text-purple-600 hover:text-purple-800">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="max-w-4xl mx-auto bg-white p-8 shadow-md rounded-lg mt-8">
+        <h1 class="text-3xl font-semibold text-center mb-8">Your Cart</h1>
+
+        <!-- รายการสินค้าที่ซื้อ -->
+        <div class="space-y-4" id="cart-items">
+            <div class="flex justify-between items-center py-4 border-b" data-item-id="1">
+                <img src="images/ai_pic3.jpg" alt="Product Image" class="w-16 h-16 object-cover">
+                <div class="flex items-center space-x-2">
+                    <button class="change-quantity-btn" onclick="updateQuantity(1, -1)">-</button>
+                    <input type="number" data-id="1" class="quantity-input w-12 text-center" value="2" onchange="updateQuantity(1)">
+                    <button class="change-quantity-btn" onclick="updateQuantity(1, 1)">+</button>
+                </div>
+                <span class="item-price" data-price="99">$99</span>
+            </div>
+            <div class="flex justify-between items-center py-4 border-b" data-item-id="2">
+                <img src="images/ai_pic1.jpg" alt="Product Image" class="w-16 h-16 object-cover">
+                <div class="flex items-center space-x-2">
+                    <button class="change-quantity-btn" onclick="updateQuantity(2, -1)">-</button>
+                    <input type="number" data-id="2" class="quantity-input w-12 text-center" value="1" onchange="updateQuantity(2)">
+                    <button class="change-quantity-btn" onclick="updateQuantity(2, 1)">+</button>
+                </div>
+                <span class="item-price" data-price="99">$99</span>
+            </div>
+        </div>
+
+        <!-- ที่อยู่ -->
+        <div class="mt-8">
+            <div class="flex justify-between items-center cursor-pointer" onclick="toggleShippingAddress()">
+                <h2 class="text-2xl font-semibold mb-4">Shipping Address</h2>
+                <svg id="shipping-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6 transform transition-transform duration-200">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div id="shipping-address" class="hidden">
+                <textarea id="address" class="w-full p-4 border border-gray-300 rounded-lg" rows="4" placeholder="Enter your shipping address"></textarea>
+                <svg id="address-check" class="hidden w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- ข้อมูลการชำระเงิน -->
+        <div class="mt-8">
+            <div class="flex justify-between items-center cursor-pointer" onclick="togglePaymentMethod()">
+                <h2 class="text-2xl font-semibold mb-4">Payment Method</h2>
+                <svg id="payment-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6 transform transition-transform duration-200">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div id="payment-method" class="hidden">
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="radio" id="credit-card" name="payment-method" checked class="mr-2">
+                        <label for="credit-card" class="text-lg">Credit Card</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="radio" id="paypal" name="payment-method" class="mr-2">
+                        <label for="paypal" class="text-lg">PayPal</label>
+                    </div>
+                </div>
+                <svg id="payment-check" class="hidden w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- ข้อมูลการสั่งซื้อ -->
+        <div class="mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Order Info</h2>
+            <div class="space-y-2">
+                <div class="flex justify-between py-2 border-b">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                    <span>Shipping:</span>
+                    <span id="shipping">$5</span>
+                </div>
+                <div class="flex justify-between py-2 font-semibold border-b">
+                    <span>Total:</span>
+                    <span id="total">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ปุ่มยืนยันการสั่งซื้อ -->
+        <div class="text-center mt-8">
+            <button id="checkout-btn" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">
+                Proceed to Checkout
+            </button>
+        </div>
+    </div>
+</body>
+</html>
